@@ -1,0 +1,67 @@
+---
+
+ - name: Install firewalld on CentOS
+   hosts: centos
+   tasks:
+     - name: Install firewalld
+       ansible.builtin.yum:
+         name: firewalld
+         state: present
+       become: true
+
+ - name: Install ufw on Ubuntu
+   hosts: ubuntu
+   tasks:
+     - name: Install ufw
+       ansible.builtin.apt:
+         name: ufw
+         state: present
+       become: true
+
+ - name: Configure deny Policy
+   hosts: all
+   tasks:
+     - name: Set deny policy
+       ansible.builtin.shell: ufw deny from any to any
+       when: ansible_os_family == "Debian"
+       become: true
+     - name: Set deny policy
+       ansible.builtin.shell: firewall-cmd --zone=public --add-rich-rule='rule family="ipv4" source address="0.0.0.0/0" reject' --permanent
+       when: ansible_os_family == "RedHat"
+       become: true
+
+ - name: Test deny policy
+   hosts: all
+   tasks:
+     - name: Test deny policy
+       ansible.builtin.shell: ufw status
+       become: true
+       when: ansible_os_family == "Debian"
+     - name: Test deny policy
+       ansible.builtin.shell: firewall-cmd --list-all
+       become: true
+       when: ansible_os_family == "RedHat"
+
+ - name: Configure accept policy
+   hosts: all
+   tasks:
+     - name: Set accept policy
+       ansible.builtin.shell: ufw allow 22
+       when: ansible_os_family == "Debian"
+       become: true
+     - name: Set accept policy
+       ansible.builtin.shell: firewall-cmd --zone=public --add-port=22/tcp --permanent
+       when: ansible_os_family == "RedHat"
+       become: true
+
+ - name: Test accept policy
+   hosts: all
+   tasks:
+     - name: Test accept policy
+       ansible.builtin.shell: ufw status
+       become: true
+       when: ansible_os_family == "Debian"
+     - name: Test accept policy
+       ansible.builtin.shell: firewall-cmd --list-all
+       become: true
+       when: ansible_os_family == "RedHat"
